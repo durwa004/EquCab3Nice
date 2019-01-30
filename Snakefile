@@ -91,7 +91,7 @@ def gen_ensem_id_map():
 ensem_id_map = gen_ensem_id_map()
 
 GCF = 'GCF_002863925.1_EquCab3.0'
-ENSEM_GCF = 'Equus_caballus.EquCab3.0.95'
+ENSEM_GCA = 'GCA_002863925.1_EquCab3.0'
 
 
 #samples, = S3.glob_wildcards("RnaSeqData/120622_SN261_0440_AD10CBACXX/Project_McCue_Project_002/{sample}.fastq")
@@ -100,82 +100,82 @@ ENSEM_GCF = 'Equus_caballus.EquCab3.0.95'
 rule all:
     input:
 #        S3.remote(expand('HorseGeneAnnotation/private/sequence/RNASEQ/fastq/{sample}.fastq.gz',sample=samples))
-        '/home/mccuem/cull0084/projects/horse_gene_annotation/annotation/ensembl/Equus_caballus.EquCab3.0.95.nice.gff3.gz'        
+        '/project/cull0084/horse_gene_annotation/annotation/ensembl/GCA_002863925.1_EquCab3.0_genomic.nice.gff3.gz'
 
-rule compress_fastq:
-    input:
-        S3.remote('RnaSeqData/120622_SN261_0440_AD10CBACXX/Project_McCue_Project_002/{sample}.fastq')
-    output:
-        S3.remote('HorseGeneAnnotation/private/sequence/RNASEQ/fastq/{sample}.fastq.gz')
-    run:
-        shell('gzip -c {input} > {output}')
-
-rule STAR_INDEX:
-    input:
-        gff = S3.remote("HorseGeneAnnotation/public/refgen/{GCF}/{GCF}_genomic.nice.gff.gz"),
-        fna = S3.remote("HorseGeneAnnotation/public/refgen/{GCF}/{GCF}_genomic.nice.fna.gz")
-    output:
-        S3.remote('HorseGeneAnnotation/public/refgen/{GCF}/STAR_INDICES/Genome'),
-        S3.remote('HorseGeneAnnotation/public/refgen/{GCF}/STAR_INDICES/SA'),
-        S3.remote('HorseGeneAnnotation/public/refgen/{GCF}/STAR_INDICES/SAindex'),
-        S3.remote('HorseGeneAnnotation/public/refgen/{GCF}/STAR_INDICES/chrLength.txt'),
-        S3.remote('HorseGeneAnnotation/public/refgen/{GCF}/STAR_INDICES/chrName.txt'),
-        S3.remote('HorseGeneAnnotation/public/refgen/{GCF}/STAR_INDICES/chrNameLength.txt'),
-        S3.remote('HorseGeneAnnotation/public/refgen/{GCF}/STAR_INDICES/chrStart.txt'),
-        S3.remote('HorseGeneAnnotation/public/refgen/{GCF}/STAR_INDICES/exonGeTrInfo.tab'),
-        S3.remote('HorseGeneAnnotation/public/refgen/{GCF}/STAR_INDICES/exonInfo.tab'),
-        S3.remote('HorseGeneAnnotation/public/refgen/{GCF}/STAR_INDICES/geneInfo.tab'),
-        S3.remote('HorseGeneAnnotation/public/refgen/{GCF}/STAR_INDICES/genomeParameters.txt'),
-        S3.remote('HorseGeneAnnotation/public/refgen/{GCF}/STAR_INDICES/sjdbInfo.txt'),
-        S3.remote('HorseGeneAnnotation/public/refgen/{GCF}/STAR_INDICES/sjdbList.fromGTF.out.tab'),
-        S3.remote('HorseGeneAnnotation/public/refgen/{GCF}/STAR_INDICES/sjdbList.out.tab'),
-        S3.remote('HorseGeneAnnotation/public/refgen/{GCF}/STAR_INDICES/transcriptInfo.tab') 
-    threads: 30
-    shell:
-        '''STAR \
-          --runThreadN {threads} \
-          --runMode genomeGenerate \
-          --genomeDir HorseGeneAnnotation/public/refgen/{GCF}/STAR_INDICES/ \
-          --genomeFastaFiles {input.fna} \
-          --sjdbGTFfile {input.gff} \
-          --sjdbGTFtagExonParentTranscript Parent 
-        '''
-
-rule NICE_FASTA:
-    input:
-        fna = FTP.remote('ftp://ftp.ncbi.nlm.nih.gov/genomes/refseq/vertebrate_mammalian/Equus_caballus/all_assembly_versions/{GCF}/{GCF}_genomic.fna.gz')
-    output:
-        fna = S3.remote("HorseGeneAnnotation/public/refgen/{GCF}/{GCF}_genomic.nice.fna.gz")
-    run:
-        with RawFile(input.fna) as IN, open(output.fna,'w') as OUT:                                                                                                        
-            for line in IN:                                        
-                if line.startswith('>'):
-                    name, *fields = line.lstrip('>').split()
-                    if name in id_map:
-                        new_name = '>' + id_map[name]
-                        line = ' '.join([new_name, name] + fields + ['\n'])
-                print(line,file=OUT,end='')
-
-rule NICE_GFF:
-    input:
-        gff = FTP.remote('ftp://ftp.ncbi.nlm.nih.gov/genomes/refseq/vertebrate_mammalian/Equus_caballus/all_assembly_versions/{GCF}/{GCF}_genomic.gff.gz')
-    output:
-        gff = S3.remote("HorseGeneAnnotation/public/refgen/{GCF}/{GCF}_genomic.nice.gff.gz")
-    run:
-        with RawFile(input.gff) as IN, \
-            open(output.gff,'w') as OUT:
-            for line in IN:
-                id,*fields = line.split('\t')
-                if id in id_map:
-                    id = id_map[id]
-                print(id,*fields,file=OUT,sep='\t',end='')
+#rule compress_fastq:
+#    input:
+#        S3.remote('RnaSeqData/120622_SN261_0440_AD10CBACXX/Project_McCue_Project_002/{sample}.fastq')
+#    output:
+#        S3.remote('HorseGeneAnnotation/private/sequence/RNASEQ/fastq/{sample}.fastq.gz')
+#    run:
+#        shell('gzip -c {input} > {output}')
+#
+#rule STAR_INDEX:
+#    input:
+#        gff = S3.remote("HorseGeneAnnotation/public/refgen/{GCF}/{GCF}_genomic.nice.gff.gz"),
+#        fna = S3.remote("HorseGeneAnnotation/public/refgen/{GCF}/{GCF}_genomic.nice.fna.gz")
+#    output:
+#        S3.remote('HorseGeneAnnotation/public/refgen/{GCF}/STAR_INDICES/Genome'),
+#        S3.remote('HorseGeneAnnotation/public/refgen/{GCF}/STAR_INDICES/SA'),
+#        S3.remote('HorseGeneAnnotation/public/refgen/{GCF}/STAR_INDICES/SAindex'),
+#        S3.remote('HorseGeneAnnotation/public/refgen/{GCF}/STAR_INDICES/chrLength.txt'),
+#        S3.remote('HorseGeneAnnotation/public/refgen/{GCF}/STAR_INDICES/chrName.txt'),
+#        S3.remote('HorseGeneAnnotation/public/refgen/{GCF}/STAR_INDICES/chrNameLength.txt'),
+#        S3.remote('HorseGeneAnnotation/public/refgen/{GCF}/STAR_INDICES/chrStart.txt'),
+#        S3.remote('HorseGeneAnnotation/public/refgen/{GCF}/STAR_INDICES/exonGeTrInfo.tab'),
+#        S3.remote('HorseGeneAnnotation/public/refgen/{GCF}/STAR_INDICES/exonInfo.tab'),
+#        S3.remote('HorseGeneAnnotation/public/refgen/{GCF}/STAR_INDICES/geneInfo.tab'),
+#        S3.remote('HorseGeneAnnotation/public/refgen/{GCF}/STAR_INDICES/genomeParameters.txt'),
+#        S3.remote('HorseGeneAnnotation/public/refgen/{GCF}/STAR_INDICES/sjdbInfo.txt'),
+#        S3.remote('HorseGeneAnnotation/public/refgen/{GCF}/STAR_INDICES/sjdbList.fromGTF.out.tab'),
+#        S3.remote('HorseGeneAnnotation/public/refgen/{GCF}/STAR_INDICES/sjdbList.out.tab'),
+#        S3.remote('HorseGeneAnnotation/public/refgen/{GCF}/STAR_INDICES/transcriptInfo.tab') 
+#    threads: 30
+#    shell:
+#        '''STAR \
+#          --runThreadN {threads} \
+#          --runMode genomeGenerate \
+#          --genomeDir HorseGeneAnnotation/public/refgen/{GCF}/STAR_INDICES/ \
+#          --genomeFastaFiles {input.fna} \
+#          --sjdbGTFfile {input.gff} \
+#          --sjdbGTFtagExonParentTranscript Parent 
+#        '''
+#
+#rule NICE_FASTA:
+#    input:
+#        fna = FTP.remote('ftp://ftp.ncbi.nlm.nih.gov/genomes/refseq/vertebrate_mammalian/Equus_caballus/all_assembly_versions/{GCF}/{GCF}_genomic.fna.gz')
+#    output:
+#        fna = S3.remote("HorseGeneAnnotation/public/refgen/{GCF}/{GCF}_genomic.nice.fna.gz")
+#    run:
+#        with RawFile(input.fna) as IN, open(output.fna,'w') as OUT:                                                                                                        
+#            for line in IN:                                        
+#                if line.startswith('>'):
+#                    name, *fields = line.lstrip('>').split()
+#                    if name in id_map:
+#                        new_name = '>' + id_map[name]
+#                        line = ' '.join([new_name, name] + fields + ['\n'])
+#                print(line,file=OUT,end='')
+#
+#rule NICE_GFF:
+#    input:
+#        gff = FTP.remote('ftp://ftp.ncbi.nlm.nih.gov/genomes/refseq/vertebrate_mammalian/Equus_caballus/all_assembly_versions/{GCF}/{GCF}_genomic.gff.gz')
+#    output:
+#        gff = S3.remote("HorseGeneAnnotation/public/refgen/{GCF}/{GCF}_genomic.nice.gff.gz")
+#    run:
+#        with RawFile(input.gff) as IN, \
+#            open(output.gff,'w') as OUT:
+#            for line in IN:
+#                id,*fields = line.split('\t')
+#                if id in id_map:
+#                    id = id_map[id]
+#                print(id,*fields,file=OUT,sep='\t',end='')
 
 
 rule NICE_ENSEM_GFF:
     input:
         gff = FTP.remote('ftp://ftp.ensembl.org/pub/release-95/gff3/equus_caballus/Equus_caballus.EquCab3.0.95.gff3.gz')
     output:
-        gff = '/home/mccuem/cull0084/projects/horse_gene_annotation/annotation/ensembl/Equus_caballus.EquCab3.0.95.nice.gff3.gz'
+        gff = '/project/cull0084/horse_gene_annotation/annotation/ensembl/{ENSEM_GCA}_genomic.nice.gff3.gz'
     run:
         with RawFile(input.gff) as IN, \
             open(output.gff,'w') as OUT:
