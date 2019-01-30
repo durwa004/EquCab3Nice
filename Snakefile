@@ -173,7 +173,7 @@ rule NICE_GFF:
 
 rule NICE_ENSEM_GFF:
     input:
-        gff = FTP.remote('ftp://ftp.ncbi.nlm.nih.gov/genomes/all/GCF/002/863/925/GCF_002863925.1_EquCab3.0/GCF_002863925.1_EquCab3.0_genomic.gff.gz')
+        gff = FTP.remote('ftp://ftp.ensembl.org/pub/release-95/gff3/equus_caballus/Equus_caballus.EquCab3.0.95.gff3.gz')
     output:
         gff = '/home/mccuem/cull0084/projects/horse_gene_annotation/annotation/ensembl/Equus_caballus.EquCab3.0.95.nice.gff3.gz'
     run:
